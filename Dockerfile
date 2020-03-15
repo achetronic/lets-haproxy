@@ -20,8 +20,8 @@ RUN chown root:root /root/*.sh
 RUN chmod +x /root/*.sh
 
 # Schedule the renovation (set to daily)
-touch /var/spool/cron/crontabs/root 
-echo "0 4 * * * /root/renew.sh" >> /var/spool/cron/crontabs/root
+RUN touch /var/spool/cron/crontabs/root 
+RUN echo "0 4 * * * /root/renew.sh" >> /var/spool/cron/crontabs/root
 
 
 
