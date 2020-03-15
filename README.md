@@ -1,4 +1,3 @@
-
 ## Introduction
 I made this image because I needed something lighter and quicker than
 Cert-manager working just with DNS challenge in Digital Ocean because DNS challenge 
@@ -16,5 +15,7 @@ is the most simple and the fastest one taking Letsencrypt's certificates.
    * SKIP_CREATION = true | false
    * DOMAIN_CERT_1 = "domain.com"
    * DOMAIN_CERT_2 = "sub.domain.com"
+   
      [...]
+
    * DOMAIN_CERT_n = "xxx.domain.com"
