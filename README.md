@@ -19,3 +19,15 @@ is the most simple and the fastest one taking Letsencrypt's certificates.
      [...]
 
    * DOMAIN_CERT_n = "xxx.domain.com"
+
+
+## Hot to run
+```
+docker run -it \
+  --env ADMIN_MAIL=admin@example.com \
+  --env DO_TOKEN=678b1f7e3bb30231... \
+  --env DOMAIN_CERT_1=example.com \
+  --env DOMAIN_CERT_2="*.example.com" \
+  --env SKIP_CREATION=false \
+  do-certbot:latest 
+```

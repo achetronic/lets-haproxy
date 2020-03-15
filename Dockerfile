@@ -3,6 +3,7 @@ FROM debian:buster
 
 
 #### CERTIFICATE PRE-STEPS
+
 # Install basic packages for scheduling jobs and installing python packages
 RUN apt-get update && apt-get install -y -qq --force-yes nano cron python3-pip --no-install-recommends > /dev/null
 
@@ -30,4 +31,6 @@ RUN rm -rf /init.sh && touch /init.sh
 RUN echo "#!/bin/bash" >> /init.sh
 RUN echo "/root/create.sh" >> /init.sh
 RUN echo "/bin/bash" >> /init.sh
+RUN chown root:root /init.sh
+RUN chmod +x /init.sh
 CMD /init.sh

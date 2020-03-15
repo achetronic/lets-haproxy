@@ -21,10 +21,16 @@ ADMIN_MAIL="$(printenv ADMIN_MAIL)"
 chmod +x /root/dotini.sh && /root/dotini.sh
 
 #### CHECKINGS
-# Check if admin want to skip creation
-if [ $(echo "$SKIP_CREATION" | tr '[:upper:]' '[:lower:]') == "true" ]; then
-  echo "Skipping certificate creation"
-  exit;
+
+# Check if any domain was given
+if [ -z "$SKIP_CREATION" ]; then
+  echo "Certificate generation in process"
+else
+  # Check if admin want to skip creation
+  if [ $(echo "$SKIP_CREATION" | tr '[:upper:]' '[:lower:]') == "true" ]; then
+    echo "Skipping certificate creation"
+    exit;
+  fi
 fi
 
 # Check if any domain was given
