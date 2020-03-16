@@ -1,4 +1,4 @@
-# Bugs
+## Bugs
 If you find some bug or something that can be improved, please, feel free to contact me at me@achetronic.com
 
 
