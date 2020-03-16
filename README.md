@@ -1,7 +1,20 @@
+# Bugs
+If you find some bug or something that can be improved, please, feel free to contact me at me@achetronic.com
+
+
 ## Introduction
-I made this image because I needed something lighter and quicker than
-Cert-manager working just with DNS challenge in Digital Ocean because DNS challenge 
-is the most simple and the fastest one taking Letsencrypt's certificates.
+I made this image because I needed something light and quick working with DNS challenge 
+in Digital Ocean cloud service. That type of challenge is the most simple and the fastest one getting 
+Letsencrypt's certificates.
+
+
+## Who want this
+Useful for Docker Compose and Swarm users. With this image you can bind mount two volumes 
+and automate the task of getting and renewing LE certificates in about 30 seconds.
+This container is always running in background and tries to renew all certificates once a day in the night.
+In the mounted volumes you can find only logs and certificates. No more hard work needed 
+with Digital Ocean as provider
+
 
 ## How to use
 1. Point your domain name to Digital Ocean's DNS servers
