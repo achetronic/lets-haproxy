@@ -52,6 +52,6 @@ docker run -it \
   --env SKIP_CREATION=false \
   -v "$(pwd)"/letsencrypt/log:/var/log/letsencrypt/ \
   -v "$(pwd)"/letsencrypt/live:/etc/letsencrypt/live \
-  do-certbot:latest 
+  achetronic/do-certbot:latest 
 ```
 
