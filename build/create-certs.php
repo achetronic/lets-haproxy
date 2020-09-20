@@ -45,7 +45,6 @@ try {
 
     # Put all domains together (comma separated)
     $domains = array_column($schema->parsedSchema, 'domain');
-    $domainsTogether = implode ( ',' , $domains );
 
     # Get the email from ENV vars
     $email = getenv('ADMIN_MAIL');
@@ -62,11 +61,18 @@ try {
         $staging = '';
     }
 
-    # Try to get certificates
-    $cmd = shell_exec('certbot certonly --standalone -d '.$domainsTogether.' -m '.$email.' --agree-tos --expand -n --http-01-port 8080 '.$staging);
+    # Delete all certificates
+    echo "Deleting old certificates from Certbot" . PHP_EOL;
+    $cmd = shell_exec("printf '\n' | certbot delete");
 
-    # Check if certs where created on /etc/letsencrypt/live
-    foreach ( $domains as $domain ) {
+    # Try to get certificates
+    echo "Getting new certificates from Certbot" . PHP_EOL;
+    foreach ( $domains as $domain ){
+
+        # Ask Certbot for them
+        $cmd = shell_exec('certbot certonly --standalone -d '.$domain.' -m '.$email.' --cert-name '.$domain.' --agree-tos --expand -n --http-01-port 8080 '.$staging);
+
+        # Check the certificate existance on /etc/letsencrypt/live
         if ( 
             !file_exists($certsPath . '/' . $domain) 
             || count(scandir($certsPath . '/' . $domain)) <= 2 
