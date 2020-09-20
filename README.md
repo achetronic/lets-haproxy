@@ -67,6 +67,14 @@ As you can see, there is a file called schema.json that is mounted into the imag
             "200.164.0.3:8060"
         ],
         "balance" : "roundrobin"
+    },
+    {
+        "bind"  : 90,
+        "servers" : [
+            "192.168.0.2:90",
+            "192.168.0.2:100"
+        ],
+        "balance" : "roundrobin"
     }
 ]
 
