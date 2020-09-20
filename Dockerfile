@@ -27,19 +27,35 @@ RUN rm -rf /tmp/safe-haproxy
 
 # Giving permissions to the executables
 RUN chown root:root /root/*
-RUN chmod +x /root/*.sh
-
-# Schedule the renovation (set to daily)
-RUN touch /var/spool/cron/crontabs/root 
-RUN echo "0 4 * * * /root/renew.sh" >> /var/spool/cron/crontabs/root
+RUN find /root -type f -exec chmod 644 {} \;
+RUN find /root -type d -exec chmod 755 {} \;
+RUN chmod +x /root/*
 
 
 
-#### RUNTIME SCRIPT
+# ENTRYPOINT
+RUN rm -rf /entrypoint.sh && touch /entrypoint.sh
+RUN echo "#!/bin/bash" >> /entrypoint.sh
+RUN echo "service cron start" >> /entrypoint.sh
+RUN echo "(crontab -l; echo '0 4 * * * php /root/renew-certs.php >> /dev/null 2>&1';) | crontab -" >> /entrypoint.sh
+RUN echo "touch /etc/crontab /etc/cron.*/*" >> /entrypoint.sh
+RUN echo 'exec "$@"' >> /entrypoint.sh
+
+RUN chown root:root /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# CMD
 RUN rm -rf /init.sh && touch /init.sh
 RUN echo "#!/bin/bash" >> /init.sh
-RUN echo "/root/create.sh" >> /init.sh
+RUN echo "php /root/create-certs.php" >> /init.sh
 RUN echo "/bin/bash" >> /init.sh
+
 RUN chown root:root /init.sh
 RUN chmod +x /init.sh
+
+# GAINING COMFORT
+WORKDIR "/root"
+
+# EXECUTING START SCRIPT
+ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
