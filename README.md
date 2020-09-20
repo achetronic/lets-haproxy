@@ -29,12 +29,47 @@ Useful for Docker Compose and Swarm users. With this image you can have a safe h
 3. Bind /var/log/letsencrypt for logs
 4. Bind /etc/letsencrypt/live for certificates
 5. Set environment variables
-   * ADMIN_MAIL = admin@example.com
+   * ADMIN_MAIL    = admin@example.com
    * SKIP_CREATION = true | false
+   * ENVIRONMENT   = production | staging
 
 
 ## Fast to go
 ```
+docker run -it \
+  --env ADMIN_MAIL=admin@example.com \
+  --env SKIP_CREATION=false \
+  --env ENVIRONMENT=staging \
+  -v "./schema.json:/root/definition/schema.json" \
+  -v "letsencrypt_logs:/var/log/letsencrypt" \
+  -v "letsencrypt_data:/etc/letsencrypt" \
+  achetronic/safe-haproxy:latest 
 
 ```
+
+## schema.json file
+As you can see, there is a file called schema.json that is mounted into the image. You need a file with your domains (or subdomains), backend IPs and the strategy for the load balancer
+
+```
+[
+    {
+        "domain"  : "your-domain.com",
+        "servers" : [
+            "192.168.0.2:8020",
+            "192.168.0.3:8030"
+        ],
+        "balance" : "roundrobin"
+    },
+    {
+        "domain"  : "other-your-domain.com",
+        "servers" : [
+            "199.162.1.4:8010",
+            "200.164.0.3:8060"
+        ],
+        "balance" : "roundrobin"
+    }
+]
+
+```
+
 
