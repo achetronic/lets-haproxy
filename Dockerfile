@@ -2,7 +2,7 @@ FROM debian:buster
 
 
 
-#### CERTIFICATE PRE-STEPS
+#### PRE-STEPS
 
 # Install basic packages for scheduling jobs and installing python packages
 RUN apt-get update && apt-get install -y -qq --force-yes nano cron python3-pip --no-install-recommends > /dev/null
@@ -14,10 +14,19 @@ RUN pip3 install --upgrade certbot-dns-digitalocean > /dev/null
 
 
 
-#### CERTIFICATE OPERATIONS
-# Copy the files for creation and renovation
-COPY build/* /root/
-RUN chown root:root /root/*.sh
+#### OPERATIONS
+# Creating a temporary folder for our app
+RUN mkdir -p /tmp/safe-haproxy
+
+# Download the entire project
+COPY . /tmp/safe-haproxy/
+
+# Moving the app to the right place
+RUN cp -r /tmp/safe-haproxy/build/* /root
+RUN rm -rf /tmp/safe-haproxy
+
+# Giving permissions to the executables
+RUN chown root:root /root/*
 RUN chmod +x /root/*.sh
 
 # Schedule the renovation (set to daily)
