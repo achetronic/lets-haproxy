@@ -1,16 +1,16 @@
-FROM debian:buster
+FROM debian:buster-slim
+
+#### DEFINING VARS
+ARG php_version=7.3
 
 
 
-#### PRE-STEPS
+#### SYSTEM OPERATIONS
+# Install basic packages
+RUN apt-get update && apt-get install -y -qq --force-yes lsb-base nano certbot haproxy --no-install-recommends > /dev/null
 
-# Install basic packages for scheduling jobs and installing python packages
-RUN apt-get update && apt-get install -y -qq --force-yes nano cron python3-pip --no-install-recommends > /dev/null
-
-# Install python packages to do the task
-RUN pip3 install --upgrade setuptools > /dev/null
-RUN pip3 install --upgrade wheel > /dev/null
-RUN pip3 install --upgrade certbot-dns-digitalocean > /dev/null
+# Install out automation friends: PHP
+RUN apt-get install -y -qq --force-yes cron php${php_version}-cli php${php_version}-json --no-install-recommends > /dev/null
 
 
 
