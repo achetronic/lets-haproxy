@@ -1,7 +1,7 @@
 <?php
 
-include_once("LogController.php");
-include_once("SchemaController.php");
+include_once("Controllers/LogController.php");
+include_once("Controllers/SchemaController.php");
 
 /**
  * This class has all needed functions

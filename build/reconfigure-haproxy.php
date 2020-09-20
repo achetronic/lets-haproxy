@@ -1,6 +1,6 @@
 <?php
 
-include_once("HaproxyController.php");
+include_once("Controllers/HaproxyController.php");
 
 # Create an instance of HaproxyController
 $haproxy = new HaproxyController();

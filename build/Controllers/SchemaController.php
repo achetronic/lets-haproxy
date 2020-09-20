@@ -1,6 +1,6 @@
 <?php
 
-include_once("LogController.php");
+include_once("Controllers/LogController.php");
 
 /**
  * This class has all needed functions
