@@ -1,0 +1,23 @@
+version: "3.5"
+
+
+
+# Docker services
+services:
+    # safe-haproxy for raspberry pi
+    safe-haproxy:
+        build: .
+        #image: custom-certbot:raspberry
+        container_name: safe-haproxy
+        restart: always
+        tty: true
+        stdin_open: true
+        environment:
+            ADMIN_MAIL: "me@achetronic.com"
+            SKIP_CREATION: "false"
+        volumes:
+            - ./letsencrypt/log:/var/log/letsencrypt
+            - ./letsencrypt:/etc/letsencrypt
+        ports:
+            - "80:80"
+            - "443:443"
