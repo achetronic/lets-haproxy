@@ -16,7 +16,3 @@ if( array_key_exists('m', $options) && $options['m'] == 'certbot'){
     echo "Reconfiguring Haproxy as a regular proxy" . PHP_EOL;
     $haproxy->SetRegularConfig ();
 }
-
-# Restart Haproxy
-echo "Restarting Haproxy" . PHP_EOL;
-$haproxy->Restart();

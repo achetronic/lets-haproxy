@@ -94,7 +94,14 @@ fi
 #------------------------------
 # Ask for certificates
 # -----------------------------
-
+# certbot certonly \
+#   --standalone \
+#   -d "$domains" \
+#   -m $(echo "$ADMIN_MAIL") \
+#   --agree-tos \
+#   --expand \
+#   -n \
+#   --dry-run
 
 
 
