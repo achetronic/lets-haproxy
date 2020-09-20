@@ -55,8 +55,15 @@ try {
         throw new Exception ("domains or email are empty");
     }
 
+    # Type of environment (staging | production)
+    $staging = '--staging';
+    $environment = getenv('ENVIRONMENT');
+    if( $environment == "production" ){
+        $staging = '';
+    }
+
     # Try to get certificates
-    $cmd = shell_exec('certbot certonly --standalone -d '.$domainsTogether.' -m '.$email.' --agree-tos --expand -n --http-01-port 8080 --staging');
+    $cmd = shell_exec('certbot certonly --standalone -d '.$domainsTogether.' -m '.$email.' --agree-tos --expand -n --http-01-port 8080 '.$staging);
 
     # Check if certs where created on /etc/letsencrypt/live
     foreach ( $domains as $domain ) {

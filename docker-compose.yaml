@@ -15,6 +15,9 @@ services:
         environment:
             ADMIN_MAIL: "me@achetronic.com"
             SKIP_CREATION: "false"
+            
+            # Environment: staging | production
+            ENVIRONMENT: "staging" 
         volumes:
             - ./letsencrypt/log:/var/log/letsencrypt
             - ./letsencrypt:/etc/letsencrypt
