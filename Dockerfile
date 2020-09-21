@@ -25,8 +25,8 @@ RUN mkdir -p /tmp/safe-haproxy
 COPY . /tmp/safe-haproxy/
 
 # Defining which packages Composer will install
-RUN cp /tmp/safe-haproxy/composer.lock /root/composer.lock
-RUN cp /tmp/safe-haproxy/composer.json /root/composer.json
+RUN cp /tmp/safe-haproxy/build/composer.lock /root/composer.lock
+RUN cp /tmp/safe-haproxy/build/composer.json /root/composer.json
 
 # Please, Composer, install them
 RUN composer install -d /root --no-dev --no-scripts
