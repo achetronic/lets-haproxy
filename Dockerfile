@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y -qq --force-yes lsb-base nano certbot h
 # Install out automation friends: PHP
 RUN apt-get install -y -qq --force-yes cron php${php_version}-cli php${php_version}-json --no-install-recommends > /dev/null
 
+# Installing temporary packages
+RUN apt-get install -y -qq --force-yes composer git zip unzip php${php_version}-zip --no-install-recommends > /dev/null
+
 
 
 #### OPERATIONS
@@ -21,9 +24,22 @@ RUN mkdir -p /tmp/safe-haproxy
 # Download the entire project
 COPY . /tmp/safe-haproxy/
 
+# Defining which packages Composer will install
+RUN cp /tmp/safe-haproxy/composer.lock /root/composer.lock
+RUN cp /tmp/safe-haproxy/composer.json /root/composer.json
+
+# Please, Composer, install them
+RUN composer install -d /root --no-dev --no-scripts
+
 # Moving the app to the right place
 RUN cp -r /tmp/safe-haproxy/build/* /root
 RUN rm -rf /tmp/safe-haproxy
+
+# Deleting system temporary packages
+RUN apt-get purge -y -qq --force-yes composer git zip unzip php${php_version}-zip > /dev/null
+
+# Cleaning the system
+RUN apt-get -y -qq --force-yes autoremove > /dev/null
 
 # Giving permissions to the executables
 RUN chown root:root /root/*
