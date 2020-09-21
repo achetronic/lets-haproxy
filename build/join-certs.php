@@ -1,22 +1,29 @@
 <?php
+/**
+ * Script that join several parts of Let's Encrypt
+ * certificates into one PEM file for Haproxy
+ */
 
-include_once("Controllers/HaproxyController.php");
 
-$certsDir = '/etc/letsencrypt/live';
-$joinedCertsDir = $certsDir . '/../haproxy';
+
+# Configuring paths
+$certbotCertsDir = '/etc/letsencrypt/live';
+$haproxyCertsDir = '/etc/letsencrypt/haproxy';
+
+
 
 try {
 
     # Create dir for joined certs
-    if( !file_exists($joinedCertsDir) ){
-        mkdir($joinedCertsDir, 0777, true);
+    if( !file_exists($haproxyCertsDir) ){
+        mkdir($haproxyCertsDir, 0777, true);
     }
 
     # Loop over all live certs
-    $domains = scandir($certsDir);
+    $domains = scandir($certbotCertsDir);
     foreach ($domains as $domain) {
         # Craft the real path
-        $thisCertDir = $certsDir . '/' . $domain;
+        $thisCertDir = $certbotCertsDir . '/' . $domain;
 
         # Check for strange things
         if ( $domain == '.' || $domain == '..' || !is_dir($thisCertDir) ) 
@@ -34,7 +41,7 @@ try {
         $content  = file_get_contents($thisCertDir.'/fullchain.pem').PHP_EOL;
         $content .= file_get_contents($thisCertDir.'/privkey.pem').PHP_EOL;
 
-        if( !file_put_contents($joinedCertsDir.'/'.$domain.'.pem', $content) ){
+        if( !file_put_contents($haproxyCertsDir.'/'.$domain.'.pem', $content) ){
             throw new Exception ("impossible to build haproxy-ready certificate for domain '".$domain."'");
         }
     }

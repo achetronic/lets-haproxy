@@ -1,12 +1,19 @@
 <?php
+/**
+ * Script that change Haproxy's configuration file 
+ * between the CFG for Certbot and CFG for daily use
+ */
 
-include_once("Controllers/HaproxyController.php");
+
+
+include_once("Controllers/Haproxy.php");
+
 
 
 try {
     
-    # Create an instance of HaproxyController
-    $haproxy = new HaproxyController();
+    # Create an instance of Haproxy
+    $haproxy = new Haproxy();
 
     # Take (optional) parameter -m=certbot on CLI
     $options = getopt("m:");

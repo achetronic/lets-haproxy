@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Script that configures Haproxy to obtain Let's Encrypt 
  * certificates turning it into 'certbot' mode.
@@ -9,49 +8,29 @@
  * Moreover, the script parse certificates for Haproxy and 
  * rise the server on 'regular' mode after getting the certs
  */
+include_once("Controllers/Haproxy.php");
 
-include_once("Controllers/HaproxyController.php");
 
-$certsPath = '/etc/letsencrypt/live';
 
+# Configuring paths
+$certbotCertsDir = '/etc/letsencrypt/live';
+
+
+
+#
 try {
 
-    # Create an instance of SchemaController
-    $schema = new SchemaController();
-
+    echo "Checking environment vars" . PHP_EOL;
     # User want to skip this creation?
     $skip = getenv('SKIP_CREATION');
     if( $skip != "false" ){
         throw new Exception ("creation was skipped");
     }
 
-    # Start Haproxy on Certbot mode
-    echo "Reconfiguring Haproxy as a proxy for Certbot" . PHP_EOL;
-    $cmd = shell_exec('php change-mode.php -m certbot');
-
-    # Parse the schema.json file to get domains for Certbot
-    if( ! $schema->Parse() ){
-        throw new Exception ("schema.json file is malformed");
-    }
-
-    # Loop over parsed information looking only for domains
-    foreach ( $schema->parsedSchema as $index => $value ){
-
-        # Delete keys that are not domains
-        if ( ! array_key_exists('domain', $value) ){
-            unset($schema->parsedSchema[$index]);
-        }
-    }
-
-    # Put all domains together (comma separated)
-    $domains = array_column($schema->parsedSchema, 'domain');
-
     # Get the email from ENV vars
     $email = getenv('ADMIN_MAIL');
-
-    # Check both fields (mandatory for Certbot)
-    if ( empty($domains) || empty($email) ){
-        throw new Exception ("domains or email are empty");
+    if ( empty($email) ){
+        throw new Exception ("email can not be empty");
     }
 
     # Type of environment (staging | production)
@@ -61,21 +40,30 @@ try {
         $staging = '';
     }
 
+    # Open a parser for our config file
+    echo "Parsing user haproxy.cfg file " . PHP_EOL;
+    $haproxy = new Haproxy();
+    $haproxy->ParseUserTemplate();
+
+    # Start Haproxy on Certbot mode
+    echo "Reconfiguring Haproxy as a proxy for Certbot" . PHP_EOL;
+    $cmd = shell_exec('php change-mode.php -m certbot');
+
     # Delete all certificates
     echo "Deleting old certificates from Certbot" . PHP_EOL;
     $cmd = shell_exec("printf '\n' | certbot delete");
 
     # Try to get certificates
     echo "Getting new certificates from Certbot" . PHP_EOL;
-    foreach ( $domains as $domain ){
+    foreach ( $haproxy->domainsToCert as $domain ){
 
         # Ask Certbot for them
         $cmd = shell_exec('certbot certonly --standalone -d '.$domain.' -m '.$email.' --cert-name '.$domain.' --agree-tos --expand -n --http-01-port 8080 '.$staging);
 
         # Check the certificate existance on /etc/letsencrypt/live
         if ( 
-            !file_exists($certsPath . '/' . $domain) 
-            || count(scandir($certsPath . '/' . $domain)) <= 2 
+            !file_exists($certbotCertsDir . '/' . $domain) 
+            || count(scandir($certbotCertsDir . '/' . $domain)) <= 2 
         ){
             throw new Exception ("certificate for domain '".$domain."' was not created");
         }
