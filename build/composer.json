@@ -1,28 +1,29 @@
 {
-    "name": "jalle19/haphproxy",
-    "description": "A HAProxy configuration parser for PHP",
+    "name": "achetronic/safe-haproxy",
+    "description": "A Haproxy Certbot automation",
     "type": "library",
     "license": "GPL-2.0+",
     "authors": [
         {
-            "name": "Sam Stenvall",
-            "email": "sam.stenvall@nordsoftware.com"
+            "name": "Alby Hernández",
+            "email": "me@achetronic.com"
         }
     ],
     "keywords": [
-        "haproxy"
+        "haproxy",
+        "haphproxy"
     ],
     "require": {
         "php": ">=5.6.0"
     },
     "autoload": {
         "psr-4": {
-            "Jalle19\\HaPHProxy\\": "src/"
+            "Jalle19\\HaPHProxy\\": "external/haphproxy/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Jalle19\\HaPHProxy\\Test\\": "tests/"
+            "Jalle19\\HaPHProxy\\Test\\": "external/haphproxy/tests/"
         }
     },
     "require-dev": {
