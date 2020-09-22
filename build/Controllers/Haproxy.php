@@ -4,7 +4,7 @@
  * getting Let's Encrypt certificates with PHP scripts
  */
 
-require __DIR__ . '../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 use Jalle19\HaPHProxy\Configuration;
 use Jalle19\HaPHProxy\Parser;

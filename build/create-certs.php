@@ -8,7 +8,7 @@
  * Moreover, the script parse certificates for Haproxy and 
  * rise the server on 'regular' mode after getting the certs
  */
-include_once("Controllers/Haproxy.php");
+include_once("controllers/Haproxy.php");
 
 
 
