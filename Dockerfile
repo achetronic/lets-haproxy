@@ -10,7 +10,7 @@ ARG php_version=7.3
 RUN apt-get update && apt-get install -y -qq --force-yes lsb-base nano certbot haproxy --no-install-recommends > /dev/null
 
 # Install out automation friends: PHP
-RUN apt-get install -y -qq --force-yes cron php${php_version}-cli php${php_version}-json --no-install-recommends > /dev/null
+RUN apt-get install -y -qq --force-yes cron php${php_version}-cli php${php_version}-xml --no-install-recommends > /dev/null
 
 # Installing temporary packages
 RUN apt-get install -y -qq --force-yes composer git zip unzip php${php_version}-zip --no-install-recommends > /dev/null
