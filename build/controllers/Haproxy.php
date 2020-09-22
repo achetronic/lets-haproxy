@@ -193,7 +193,7 @@ class Haproxy
                 # Get only frontend with ports 443
                 if( !empty($parsedPort) && intval($parsedPort) === 443 ){
                     $httpsFrontend = $frontendSection;
-                    unset($frontendSection);
+                    #unset($frontendSection);
                 }
             }
 
@@ -229,7 +229,7 @@ class Haproxy
             }
 
             # Add modified section to the config
-            $configuration->addSection( $httpsFrontend );
+            #$configuration->addSection( $httpsFrontend );
 
             # Dump the config into a temporary file and check it
             @unlink('/tmp/haproxy.cfg');
