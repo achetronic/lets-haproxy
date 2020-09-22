@@ -1,4 +1,4 @@
-# Safe Haproxy
+# Let's Haproxy
 
 ## Author
 Hello, developer!
@@ -11,7 +11,7 @@ There is a good article (not mine) explaining some principles about containers: 
 If you find some bug or something that can be improved, please, feel free to contact me at me@achetronic.com
 
 ## Source code of the project
-https://gitlab.com/achetronic/safe-haproxy
+https://gitlab.com/achetronic/lets-haproxy
 
 ## Introduction
 I made this image because of the need of having the Haproxy's ease and Let's Encrypt certs autoconfigured for my home server.
@@ -40,7 +40,7 @@ docker run -it \
   -v "./haproxy.cfg:/root/templates/haproxy.user.cfg" \
   -v "letsencrypt_logs:/var/log/letsencrypt" \
   -v "letsencrypt_data:/etc/letsencrypt" \
-  achetronic/safe-haproxy:latest 
+  achetronic/lets-haproxy:latest 
 
 ```
 
