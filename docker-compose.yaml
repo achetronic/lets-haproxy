@@ -4,11 +4,10 @@ version: "3.5"
 
 # Docker services
 services:
-    # safe-haproxy for raspberry pi
-    safe-haproxy:
-        build: .
-        #image: custom-certbot:raspberry
-        container_name: safe-haproxy
+    # lets-haproxy for raspberry pi
+    lets-haproxy:
+        image: achetronic/lets-haproxy:latest
+        container_name: lets-haproxy
         restart: always
         tty: true
         stdin_open: true
