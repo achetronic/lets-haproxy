@@ -63,7 +63,7 @@ RUN chmod +x /entrypoint.sh
 # CMD
 RUN rm -rf /init.sh && touch /init.sh
 RUN echo "#!/bin/bash" >> /init.sh
-RUN echo "php /root/create-certs.php" >> /init.sh
+RUN echo "php /root/main-flow.php" >> /init.sh
 RUN echo "/bin/bash" >> /init.sh
 
 RUN chown root:root /init.sh

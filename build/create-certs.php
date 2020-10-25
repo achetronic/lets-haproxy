@@ -21,11 +21,6 @@ $certbotCertsDir = '/etc/letsencrypt/live';
 try {
 
     echo "Checking environment vars" . PHP_EOL;
-    # User want to skip this creation?
-    $skip = getenv('SKIP_CREATION');
-    if( $skip != "false" ){
-        throw new Exception ("creation was skipped");
-    }
 
     # Get the email from ENV vars
     $email = getenv('ADMIN_MAIL');
@@ -68,14 +63,6 @@ try {
             throw new Exception ("certificate for domain '".$domain."' was not created");
         }
     }
-
-    # Parse certs for Haproxy
-    echo "Parsing certs for Haproxy" . PHP_EOL;
-    $cmd = shell_exec('php join-certs.php');
-
-    # Start Haproxy on regular mode
-    echo "Reconfiguring Haproxy as a regular proxy" . PHP_EOL;
-    $cmd = shell_exec('php change-mode.php');
 
     exit(0);
 
