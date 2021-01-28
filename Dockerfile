@@ -7,10 +7,20 @@ ARG php_version=7.3
 
 #### SYSTEM OPERATIONS
 # Install basic packages
-RUN apt-get update && apt-get install -y -qq --force-yes lsb-base nano certbot haproxy --no-install-recommends > /dev/null
+RUN apt-get update && apt-get install -y -qq --force-yes \
+    procps \
+    at \
+    lsb-base \
+    nano \
+    certbot \
+    haproxy \
+        --no-install-recommends > /dev/null
 
 # Install out automation friends: PHP
-RUN apt-get install -y -qq --force-yes cron php${php_version}-cli php${php_version}-xml --no-install-recommends > /dev/null
+RUN apt-get install -y -qq --force-yes \
+    php${php_version}-cli \
+    php${php_version}-xml \
+        --no-install-recommends > /dev/null
 
 # Installing temporary packages
 RUN apt-get install -y -qq --force-yes composer git zip unzip php${php_version}-zip --no-install-recommends > /dev/null
@@ -19,21 +29,21 @@ RUN apt-get install -y -qq --force-yes composer git zip unzip php${php_version}-
 
 #### OPERATIONS
 # Creating a temporary folder for our app
-RUN mkdir -p /tmp/safe-haproxy
+RUN mkdir -p /tmp/lets-haproxy
 
 # Download the entire project
-COPY . /tmp/safe-haproxy/
+COPY . /tmp/lets-haproxy/
 
 # Defining which packages Composer will install
-RUN cp /tmp/safe-haproxy/build/composer.lock /root/composer.lock
-RUN cp /tmp/safe-haproxy/build/composer.json /root/composer.json
+RUN cp /tmp/lets-haproxy/build/composer.lock /root/composer.lock
+RUN cp /tmp/lets-haproxy/build/composer.json /root/composer.json
 
 # Please, Composer, install them
 RUN composer install -d /root --no-dev --no-scripts
 
 # Moving the app to the right place
-RUN cp -r /tmp/safe-haproxy/build/* /root
-RUN rm -rf /tmp/safe-haproxy
+RUN cp -r /tmp/lets-haproxy/build/* /root
+RUN rm -rf /tmp/lets-haproxy
 
 # Deleting system temporary packages
 RUN apt-get purge -y -qq --force-yes composer git zip unzip php${php_version}-zip > /dev/null
@@ -52,26 +62,38 @@ RUN chmod +x /root/*
 # ENTRYPOINT
 RUN rm -rf /entrypoint.sh && touch /entrypoint.sh
 RUN echo "#!/bin/bash" >> /entrypoint.sh
-RUN echo "service cron start" >> /entrypoint.sh
-RUN echo "(crontab -l; echo '0 4 * * * php /root/renew-certs.php >> /dev/null 2>&1';) | crontab -" >> /entrypoint.sh
-RUN echo "touch /etc/crontab /etc/cron.*/*" >> /entrypoint.sh
+RUN echo "service atd start" >> /entrypoint.sh
+RUN echo "php /root/main-flow.php" >> /init.sh
+RUN echo "sh /root/runtime/takeover.sh" >> /entrypoint.sh
 RUN echo 'exec "$@"' >> /entrypoint.sh
+RUN echo "/bin/bash" >> /entrypoint.sh
 
+# Giving permissions to the entrypoint script
 RUN chown root:root /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# CMD
-RUN rm -rf /init.sh && touch /init.sh
-RUN echo "#!/bin/bash" >> /init.sh
-RUN echo "php /root/main-flow.php" >> /init.sh
-RUN echo "/bin/bash" >> /init.sh
+# Giving permissions to the livenessprobe script
+RUN chown root:root /root/runtime/livenessprobe.sh
+RUN chmod +x /root/runtime/livenessprobe.sh
 
-RUN chown root:root /init.sh
-RUN chmod +x /init.sh
+# Giving permissions to the takeover script
+RUN chown root:root /root/runtime/takeover.sh
+RUN chmod +x /root/runtime/takeover.sh
+
+
+
+# CMD
+# RUN rm -rf /init.sh && touch /init.sh
+# RUN echo "#!/bin/bash" >> /init.sh
+# RUN echo "php /root/main-flow.php" >> /init.sh
+# RUN echo "/bin/bash" >> /init.sh
+
+# RUN chown root:root /init.sh
+# RUN chmod +x /init.sh
 
 # GAINING COMFORT
 WORKDIR "/root"
 
 # EXECUTING START SCRIPT
 ENTRYPOINT ["/entrypoint.sh"]
-CMD /init.sh
+# CMD /init.sh
