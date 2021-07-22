@@ -1,0 +1,30 @@
+{
+  "name": "achetronic/lets-haproxy",
+  "description": "A Haproxy Certbot automation",
+  "type": "library",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Alby Hernández",
+      "email": "me@achetronic.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6.0"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "preferred-install": {
+      "*": "dist"
+    },
+    "platform": {
+      "php": "7.3"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Achetronic\\LetsHaproxy\\": "src/"
+    }
+  }
+}
