@@ -1,37 +1,16 @@
 # Let's Haproxy
 
-## Author
-Hello, developer!
-
-I am Alby Hernández (alias @achetronic) and have done several projects for the cloud in my life. Hope you like it.
-
-There is a good article (not mine) explaining some principles about containers: https://developers.redhat.com/blog/2016/02/24/10-things-to-avoid-in-docker-containers/
-
 ## Bugs
-If you find some bug or something that can be improved, please, feel free to contact me at me@achetronic.com
-
-## Source code of the project
-https://gitlab.com/achetronic/lets-haproxy
+---
 
 ## Introduction
 I made this image because of the need of having the Haproxy's ease and Let's Encrypt certs autoconfigured for my home server.
-I looked for something similar and Traeffik's documentation is a hell, Haproxy's Certbot LUA plugin is quite good but no time 
-for that and Nginx does not have plugins for that.
+I looked for something similar and all the alternatives were a hell.
 
 ## Who want this
 Everyone that use Haproxy and Docker. This is useful because you get all Haproxy options and a good automation for getting and renewing Let's Encrypt free certificates automatically.
 
 ## How to use
-1. Bind your haproxy.cfg file to /root/templates/haproxy.user.cfg 
-2. Bind a volume to /var/log/letsencrypt for saving logs
-3. Bind a volume to /etc/letsencrypt/live for saving certificates
-4. Set environment variables
-   * ADMIN_MAIL    = admin@example.com
-   * SKIP_CREATION = true | false
-   * ENVIRONMENT   = production | staging
-
-
-## Fast to go
 ```
 docker run -it \
   --env ADMIN_MAIL=admin@example.com \
@@ -40,7 +19,7 @@ docker run -it \
   -v "./haproxy.cfg:/root/templates/haproxy.user.cfg" \
   -v "letsencrypt_logs:/var/log/letsencrypt" \
   -v "letsencrypt_data:/etc/letsencrypt" \
-  achetronic/lets-haproxy:latest 
+  achetronic/lets-haproxy:latest
 
 ```
 

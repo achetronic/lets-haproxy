@@ -11,22 +11,6 @@ namespace Achetronic\LetsHaproxy\Haproxy;
 final class Service
 {
     /**
-     * List of reserved keywords
-     * in HAProxy config files
-     *
-     * REF: https://haproxy.com/blog/the-four-essential-sections-of-an-haproxy-configuration/#the-format
-     *
-     * @var array
-     */
-    private const CONFIG_RESERVED_KEYWORDS = [
-        "global",
-        "defaults",
-        "frontend",
-        "backend",
-        "listen"
-    ];
-
-    /**
      * Path to the haproxy.cfg
      * file suitable for certbot
      *
