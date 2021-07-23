@@ -8,7 +8,7 @@ namespace Achetronic\LetsHaproxy\Haproxy;
  *
  *
  */
-class Config
+final class Config
 {
     /**
      * List of reserved keywords
@@ -41,7 +41,7 @@ class Config
      * @param string $configPath
      * @return array
      */
-    private static function parseConfig(string $configPath) : array
+    private static function parseConfig(string $configPath) :array
     {
         $currentSection = [];
         $sections = [];
@@ -91,7 +91,7 @@ class Config
      * @param string $configPath
      * @return bool
      */
-    public function parse(string $configPath): bool
+    public function parse(string $configPath) :bool
     {
         $parsedConfig = self::parseConfig($configPath);
 
@@ -108,7 +108,7 @@ class Config
      * @param string $section
      * @return array
      */
-    public function getSection(string $section): array
+    public function getSection(string $section) :array
     {
         if(!in_array($section, self::CONFIG_RESERVED_KEYWORDS)) return [];
 
@@ -125,7 +125,7 @@ class Config
      * @param string $name
      * @return array
      */
-    public function getSectionByName(string $section, string $name): array
+    public function getSectionByName(string $section, string $name) :array
     {
         $section = $this->getSection($section);
         if(empty($section)) return [];
@@ -138,6 +138,55 @@ class Config
                 return $item;
         }
         return [];
+    }
+
+    /**
+     * Return frontends
+     * binded to 443 port
+     *
+     * NOTE: Should be one
+     *
+     * @return array
+     */
+    public function getSecureFrontends() :array
+    {
+        $frontends = $this->getSection("frontend");
+        $secureFrontends = [];
+
+        foreach($frontends as $key => $frontend){
+            if(!array_key_exists("bind", $frontend)) continue;
+
+            foreach ($frontend["bind"] as $bind){
+                if(!preg_match('/(:443){1}/', $bind)) continue;
+                $secureFrontends[] = $frontend;
+                break;
+            }
+        }
+        return $secureFrontends;
+    }
+
+    /**
+     * Return domains linked to
+     * frontends binded to 443 port
+     *
+     * @return array
+     */
+    public function getSecureDomains() :array
+    {
+        $frontends = $this->getSecureFrontends();
+        $secureDomains = [];
+
+        foreach($frontends as $key => $frontend){
+            if(!array_key_exists("acl", $frontend)) continue;
+
+            foreach ($frontend["acl"] as $acl){
+                $hasDomain = preg_match('/(-i\s+){1}(([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,})/', $acl, $parsedDomain);
+
+                if(!$hasDomain) continue;
+                $secureDomains[] = $parsedDomain[2];
+            }
+        }
+        return $secureDomains;
     }
 
 

@@ -8,7 +8,7 @@ namespace Achetronic\LetsHaproxy\Haproxy;
  *
  *
  */
-class Service
+final class Service
 {
     /**
      * List of reserved keywords
@@ -74,7 +74,7 @@ class Service
      *
      * @return void
      */
-    public static function restart()
+    public static function restart() :void
     {
         # Restart Haproxy
         $cmd = shell_exec('service haproxy stop');
@@ -86,7 +86,7 @@ class Service
      *
      * @return void
      */
-    public static function stop()
+    public static function stop() :void
     {
         $cmd = shell_exec('service haproxy stop');
     }
@@ -96,7 +96,7 @@ class Service
      *
      * @return void
      */
-    public static function start()
+    public static function start() :void
     {
         $cmd = shell_exec('service haproxy start');
     }
@@ -107,15 +107,13 @@ class Service
      *
      * @return bool
      */
-    public function setCertbotConfig() : bool
+    public function setCertbotConfig() :bool
     {
         try {
-            if( !copy($this->templateCertbotFile, $this->configFile) ) {
+            if( !copy($this->templateCertbotFile, $this->configFile) )
                 throw new Exception ("Failed to move Certbot config template to destination");
-            }
 
             return true;
-
         } catch ( Exception $e ) {
             return false;
         }
@@ -127,19 +125,16 @@ class Service
      *
      * @return bool
      */
-    public function setRegularConfig() : bool
+    public function setRegularConfig() :bool
     {
         try {
-            if(!$this->parseUserTemplate()) {
+            if(!$this->parseUserTemplate())
                 throw new Exception ("Failed to parse user's config file");
-            }
 
-            if( !copy('/tmp/haproxy.cfg', $this->configFile) ) {
+            if( !copy('/tmp/haproxy.cfg', $this->configFile) )
                 throw new Exception ("Failed to move /tmp/haproxy.cfg to destination");
-            }
 
             return true;
-
         } catch ( Exception $e ) {
             return false;
         }

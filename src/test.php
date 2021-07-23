@@ -11,7 +11,7 @@ $config = new Config();
 $config->parse($configPath);
 
 
-var_dump($config->getSection("frontend"));
+var_dump($config->getSecureDomains());
 
 
 
