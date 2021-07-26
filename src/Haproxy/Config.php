@@ -32,7 +32,7 @@ final class Config
      *
      * @var array
      */
-    public $parsedConfig;
+    private $parsedConfig;
 
     /**
      * Convert Haproxy config file
@@ -50,10 +50,11 @@ final class Config
         if(!$filePointer){ return []; }
 
         while(($line = fgets($filePointer)) !== false){
+            $line = preg_replace('/\s+/', ' ', trim($line));
+            if(empty($line)) continue;
             if(strpos( $line , "#" ) === 0) continue;
-            $line = preg_replace('/\s+/', ' ',$line);
 
-            $brokenLine = explode(" ", trim($line), 2);
+            $brokenLine = explode(" ", $line, 2);
             $brokenLine[0] = trim($brokenLine[0]);
             $brokenLine[1] = isset($brokenLine[1]) ? trim($brokenLine[1]) : null;
 
