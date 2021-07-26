@@ -209,9 +209,9 @@ final class Config
      * Prepare frontends binded to 443 port
      * to use Let's Encrypt certs
      *
-     * @return void
+     * @return bool
      */
-    private function prepareSecureFrontends() :void
+    private function prepareSecureFrontends() :bool
     {
         $secureFrontends = $this->getSecureFrontends();
         $preparedFrontends = [];
@@ -224,7 +224,23 @@ final class Config
             }
             $preparedFrontends[$key] = $frontend;
         }
-        $this->parsedConfig = array_replace($this->parsedConfig, $preparedFrontends);
+        $replace = array_replace($this->parsedConfig, $preparedFrontends);
+        if(is_null($replace)) return false;
+
+        $this->parsedConfig = $replace;
+        return true;
+    }
+
+    /**
+     * Prepare config to use Let's Encrypt certs
+     *
+     * @return bool
+     */
+    public function prepare() :bool
+    {
+        if(!$this->prepareSecureFrontends())
+            return false;
+        return true;
     }
 
     /**
