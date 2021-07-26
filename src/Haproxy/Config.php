@@ -32,7 +32,7 @@ final class Config
      *
      * @var array
      */
-    private $parsedConfig;
+    public $parsedConfig;
 
     /**
      * Convert Haproxy config file
@@ -60,14 +60,14 @@ final class Config
             # Section found
             if(in_array($brokenLine[0], self::CONFIG_RESERVED_KEYWORDS)){
                 if (isset($currentSection["type"])){
-                    $sections[$currentSection["type"]][] = $currentSection;
+                    $sections[] = $currentSection;
                     $currentSection = [];
                 }
                 $currentSection["type"] = $brokenLine[0];
 
-                $currentSection["name"] = null;
+                $currentSection["label"] = null;
                 if($brokenLine[0] !== "defaults" && $brokenLine[0] !== "global")
-                    $currentSection["name"] = $brokenLine[1];
+                    $currentSection["label"] = $brokenLine[1];
             }
 
             # Command found
@@ -78,7 +78,7 @@ final class Config
             }
         }
         if (feof($filePointer) && !empty($currentSection)) {
-            $sections[$currentSection["type"]][] = $currentSection;
+            $sections[] = $currentSection;
         }
         fclose($filePointer);
         return $sections;
@@ -103,39 +103,55 @@ final class Config
     }
 
     /**
-     * Return desired section
+     * Get parsed config stored
+     * inside the instance
      *
-     * @param string $section
      * @return array
      */
-    public function getSection(string $section) :array
+    public function getParsed() :array
     {
-        if(!in_array($section, self::CONFIG_RESERVED_KEYWORDS)) return [];
+        if(empty($this->parsedConfig)) return [];
+        return $this->parsedConfig;
+    }
 
-        if(!array_key_exists($section, $this->parsedConfig)) return [];
+    /**
+     * Return a pointer array
+     * to all section whose type is $type
+     *
+     * @param string $type
+     * @return array
+     */
+    private function getSection(string $type) :array
+    {
+        if(!in_array($type, self::CONFIG_RESERVED_KEYWORDS)) return [];
 
-        return $this->parsedConfig[$section];
+        $results = [];
+        foreach($this->parsedConfig as $key => $section){
+            if($section["type"] === $type) $results[$key]=$section;
+        }
+
+        return $results;
     }
 
     /**
      * Return desired section
-     * defined by its name
+     * defined by its label
      *
-     * @param string $section
-     * @param string $name
+     * @param string $type
+     * @param string $label
      * @return array
      */
-    public function getSectionByName(string $section, string $name) :array
+    private function getSectionByName(string $type, ?string $label=null) :array
     {
-        $section = $this->getSection($section);
+        $section = $this->getSection($type);
         if(empty($section)) return [];
 
-        if($section === "defaults" || $section === "global" )
+        if($type === "defaults" || $type === "global" )
             return $section;
 
         foreach($section as $key => $item){
-            if(array_key_exists("name", $item) && $item["name"] === $name)
-                return $item;
+            if(array_key_exists("label", $item) && $item["label"] === $label)
+                return [$key => $item];
         }
         return [];
     }
@@ -158,7 +174,7 @@ final class Config
 
             foreach ($frontend["bind"] as $bind){
                 if(!preg_match('/(:443){1}/', $bind)) continue;
-                $secureFrontends[] = $frontend;
+                $secureFrontends[$key] = $frontend;
                 break;
             }
         }
@@ -187,6 +203,65 @@ final class Config
             }
         }
         return $secureDomains;
+    }
+
+    /**
+     * Prepare frontends binded to 443 port
+     * to use Let's Encrypt certs
+     *
+     * @return void
+     */
+    private function prepareSecureFrontends() :void
+    {
+        $secureFrontends = $this->getSecureFrontends();
+        $preparedFrontends = [];
+
+        foreach($secureFrontends as $key => $frontend){
+
+            foreach ($frontend["bind"] as &$value){
+                if(!preg_match('/(:443){1}/', $value)) continue;
+                $value = preg_replace('/(:443){1}/', '${1} ssl crt /etc/letsencrypt/haproxy/', $value);
+            }
+            $preparedFrontends[$key] = $frontend;
+        }
+        $this->parsedConfig = array_replace($this->parsedConfig, $preparedFrontends);
+    }
+
+    /**
+     * Dump all the stored config
+     * ready to be stored
+     *
+     * NOTE: DO IT BETTER, MAN
+     *
+     * @return string
+     */
+    public function dump() :string
+    {
+        (string)$content=null;
+        foreach($this->parsedConfig as $key => $section){
+            $content .= $section["type"] . " " . $section["label"].PHP_EOL;
+            foreach($section as $parameter => $values){
+                if($parameter == "type" || $parameter== "label") continue;
+                foreach($values as $value){
+                    $content .= "  ".$parameter." ".$value.PHP_EOL;
+                }
+            }
+        }
+        return $content;
+    }
+
+    /**
+     * Store the config into a file
+     *
+     * @param string $configPath
+     * @return bool
+     */
+    public function store(string $configPath) :bool
+    {
+        if(!file_put_contents($configPath, $this->dump())){
+            return false;
+        }
+        return true;
     }
 
 

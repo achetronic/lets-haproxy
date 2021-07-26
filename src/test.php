@@ -11,7 +11,13 @@ $config = new Config();
 $config->parse($configPath);
 
 
-var_dump($config->getSecureDomains());
+#var_dump($config->parsedConfig);
+//$t = &$config->getSection("global");
+$config->prepareSecureFrontends();
+echo PHP_EOL.PHP_EOL;
+var_dump($config->parsedConfig);
+
+//var_dump($config->getSection("frontend")[0]);
 
 
 
