@@ -11,6 +11,40 @@ namespace Achetronic\LetsHaproxy\Haproxy;
 final class Config
 {
     /**
+     * Path to the auto-generated
+     * Haproxy config file
+     *
+     * @var string
+     */
+    public const TEMP_CONFIG_PATH = "/tmp/haproxy.cfg";
+
+    /**
+     * Path to the real
+     * Haproxy config file
+     *
+     * @var string
+     */
+    public const CONFIG_PATH = "/etc/haproxy/haproxy.cfg";
+
+    /**
+     * Path to the config template
+     * used by Haproxy on Lets Encrypt
+     * challenge requests
+     *
+     * @var string
+     */
+    public const CERTBOT_TEMPLATE_PATH = "/root/templates/haproxy.certbot.cfg";
+
+    /**
+     * Path to the config template
+     * used by Haproxy on regular
+     * requests as proxy
+     *
+     * @var string
+     */
+    public const USER_TEMPLATE_PATH = "/root/templates/haproxy.user.cfg";
+
+    /**
      * List of reserved keywords
      * in HAProxy config files
      *
@@ -32,7 +66,7 @@ final class Config
      *
      * @var array
      */
-    private $parsedConfig;
+    public static $parsedConfig;
 
     /**
      * Convert Haproxy config file
@@ -92,14 +126,15 @@ final class Config
      * @param string $configPath
      * @return bool
      */
-    public function parse(string $configPath) :bool
+    public static function parse(string $configPath) :bool
     {
         $parsedConfig = self::parseConfig($configPath);
 
         if(empty($parsedConfig)){
             return false;
         }
-        $this->parsedConfig = $parsedConfig;
+
+        self::$parsedConfig = $parsedConfig;
         return true;
     }
 
@@ -109,10 +144,10 @@ final class Config
      *
      * @return array
      */
-    public function getParsed() :array
+    public static function getParsed() :array
     {
-        if(empty($this->parsedConfig)) return [];
-        return $this->parsedConfig;
+        if(empty(self::$parsedConfig)) return [];
+        return self::$parsedConfig;
     }
 
     /**
@@ -122,12 +157,12 @@ final class Config
      * @param string $type
      * @return array
      */
-    private function getSection(string $type) :array
+    private static function getSection(string $type) :array
     {
         if(!in_array($type, self::CONFIG_RESERVED_KEYWORDS)) return [];
 
         $results = [];
-        foreach($this->parsedConfig as $key => $section){
+        foreach(self::$parsedConfig as $key => $section){
             if($section["type"] === $type) $results[$key]=$section;
         }
 
@@ -142,9 +177,9 @@ final class Config
      * @param string $label
      * @return array
      */
-    private function getSectionByName(string $type, ?string $label=null) :array
+    private static function getSectionByName(string $type, ?string $label=null) :array
     {
-        $section = $this->getSection($type);
+        $section = self::getSection($type);
         if(empty($section)) return [];
 
         if($type === "defaults" || $type === "global" )
@@ -165,9 +200,9 @@ final class Config
      *
      * @return array
      */
-    public function getSecureFrontends() :array
+    public static function getSecureFrontends() :array
     {
-        $frontends = $this->getSection("frontend");
+        $frontends = self::getSection("frontend");
         $secureFrontends = [];
 
         foreach($frontends as $key => $frontend){
@@ -188,9 +223,9 @@ final class Config
      *
      * @return array
      */
-    public function getSecureDomains() :array
+    public static function getSecureDomains() :array
     {
-        $frontends = $this->getSecureFrontends();
+        $frontends = self::getSecureFrontends();
         $secureDomains = [];
 
         foreach($frontends as $key => $frontend){
@@ -212,9 +247,9 @@ final class Config
      *
      * @return bool
      */
-    private function prepareSecureFrontends() :bool
+    private static function prepareSecureFrontends() :bool
     {
-        $secureFrontends = $this->getSecureFrontends();
+        $secureFrontends = self::getSecureFrontends();
         $preparedFrontends = [];
 
         foreach($secureFrontends as $key => $frontend){
@@ -225,10 +260,10 @@ final class Config
             }
             $preparedFrontends[$key] = $frontend;
         }
-        $replace = array_replace($this->parsedConfig, $preparedFrontends);
+        $replace = array_replace(self::$parsedConfig, $preparedFrontends);
         if(is_null($replace)) return false;
 
-        $this->parsedConfig = $replace;
+        self::$parsedConfig = $replace;
         return true;
     }
 
@@ -237,9 +272,9 @@ final class Config
      *
      * @return bool
      */
-    public function prepare() :bool
+    public static function prepare() :bool
     {
-        if(!$this->prepareSecureFrontends())
+        if(!self::prepareSecureFrontends())
             return false;
         return true;
     }
@@ -252,10 +287,10 @@ final class Config
      *
      * @return string
      */
-    public function dump() :string
+    public static function dump() :string
     {
         (string)$content=null;
-        foreach($this->parsedConfig as $key => $section){
+        foreach(self::$parsedConfig as $key => $section){
             $content .= $section["type"] . " " . $section["label"].PHP_EOL;
             foreach($section as $parameter => $values){
                 if($parameter == "type" || $parameter== "label") continue;
@@ -273,9 +308,9 @@ final class Config
      * @param string $configPath
      * @return bool
      */
-    public function store(string $configPath) :bool
+    public static function store(string $configPath) :bool
     {
-        if(!file_put_contents($configPath, $this->dump())){
+        if(!@file_put_contents($configPath, self::dump())){
             return false;
         }
         return true;
