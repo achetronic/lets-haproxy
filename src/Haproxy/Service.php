@@ -4,13 +4,6 @@ namespace Achetronic\LetsHaproxy\Haproxy;
 
 final class Service
 {
-    function __construct()
-    {
-        # Parse user configuration
-        Config::parse(Config::USER_TEMPLATE_PATH);
-        Config::prepare();
-    }
-
     /**
      * Stop Haproxy service
      *
@@ -64,7 +57,10 @@ final class Service
      */
     public static function setRegularConfig() :bool
     {
-        if( !Config::store( Config::TEMP_CONFIG_PATH ) )
+        # Parse user configuration
+        Config::parse(Config::USER_TEMPLATE_PATH);
+        Config::prepare();
+        if( !Config::store( Config::CONFIG_PATH ) )
             return false;
         return true;
     }

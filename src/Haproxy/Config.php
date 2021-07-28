@@ -33,7 +33,7 @@ final class Config
      *
      * @var string
      */
-    public const CERTBOT_TEMPLATE_PATH = "/root/templates/haproxy.certbot.cfg";
+    public const CERTBOT_TEMPLATE_PATH = "/usr/src/app/templates/haproxy.certbot.cfg";
 
     /**
      * Path to the config template
@@ -42,7 +42,7 @@ final class Config
      *
      * @var string
      */
-    public const USER_TEMPLATE_PATH = "/root/templates/haproxy.user.cfg";
+    public const USER_TEMPLATE_PATH = "/usr/src/app/templates/haproxy.user.cfg";
 
     /**
      * List of reserved keywords
@@ -66,7 +66,7 @@ final class Config
      *
      * @var array
      */
-    public static $parsedConfig;
+    public static $parsedConfig = [];
 
     /**
      * Convert Haproxy config file
@@ -299,7 +299,7 @@ final class Config
                 }
             }
         }
-        return $content;
+        return (string)$content;
     }
 
     /**

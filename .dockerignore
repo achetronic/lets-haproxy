@@ -1,0 +1,17 @@
+# Dockerfile files
+**/Dockerfile
+
+# Docker Compose files
+*/docker-compose.yaml
+*/docker-compose.yml
+
+# Gitlab CI files
+**/gitlab-ci.yaml
+**/gitlab-ci.yml
+
+# Github Actions files
+**/.github
+
+# Markdown files
+*.md
+!README.md

@@ -2,8 +2,10 @@
 
 namespace Achetronic\LetsHaproxy\Certbot;
 
-use \Achetronic\LetsHaproxy\Haproxy\Config;
-use \Achetronic\LetsHaproxy\Haproxy\Service;
+use Achetronic\LetsHaproxy\Haproxy\Config;
+use Achetronic\LetsHaproxy\Haproxy\Service;
+use Achetronic\LetsHaproxy\Console\Command;
+use Achetronic\LetsHaproxy\Console\Log;
 
 final class Certificate
 {
@@ -25,23 +27,97 @@ final class Certificate
     private const CERTBOT_CERTS_PATH = '/etc/letsencrypt/live';
 
     /**
+     * Email of certificates administrator
+     * who receive the renewal advises
      *
-     *
-     * @return Certificate
+     * @var string
      */
-    public function __construct (string $email, string $environment = '--staging')
+    private static ?string $email = null;
+
+    /**
+     * Environment
+     *
+     * @var string
+     */
+    private static ?string $environment = null;
+
+    /**
+     * Domains to be certificated
+     *
+     * @var array
+     */
+    private static array $domains = [];
+
+    /**
+     * Configure required email
+     * to create Lets Encrypt certificates
+     *
+     * @return bool
+     */
+    public static function setEmail (string $email) :bool
     {
-        $this->email = $email;
+        if(!preg_match("/^[a-z0-9+_.-]+@[a-z0-9.-]+$/", $email)){
+            Log::error("Failed setting email");
+            return false;
+        }
+        self::$email = $email;
+        return true;
+    }
+
+    /**
+     * Configure required environment
+     * to create Lets Encrypt certificates
+     *
+     * @return bool
+     */
+    public static function setEnvironment (string $environment) :bool
+    {
+        if(!in_array($environment, ['staging', 'production'], true)){
+            Log::error("Failed setting environment");
+            return false;
+        }
+        self::$environment = $environment;
+        return true;
+    }
+
+    /**
+     * Configure required domains
+     * to create Lets Encrypt certificates
+     *
+     * @return bool
+     */
+    public static function setDomains () :bool
+    {
+        Config::parse(Config::USER_TEMPLATE_PATH);
+        $domains = Config::getSecureDomains();
+        if(empty($domains)){
+            Log::error("Failed getting domains. No domains found");
+            return false;
+        }
+        self::$domains = $domains;
+        return true;
+    }
+
+    /**
+     * Configure required parameters
+     * to create Lets Encrypt certificates
+     *
+     * @return bool
+     */
+    public static function setParameters (string $email, string $environment = 'staging') :bool
+    {
+        if(!self::setEmail($email))
+            return false;
 
         # Type of environment (staging | production)
-        $this->environment = $environment;
-        if($environment == 'production'){
-            (string)$this->environment=null;
-        }
+        if(!self::setEnvironment($environment))
+            return false;
 
         # Extract domains to be certified
-        Config::parse(Config::USER_TEMPLATE_PATH);
-        $this->domains = Config::getSecureDomains();
+        if(!self::setDomains())
+            return false;
+
+        return true;
     }
 
     /**
@@ -51,7 +127,7 @@ final class Certificate
      *
      * @var bool
      */
-    public function join() :bool
+    public static function mergePems() :bool
     {
         # Dir for joined certs
         if( !file_exists(self::HAPROXY_CERTS_PATH) ){
@@ -62,7 +138,7 @@ final class Certificate
         $certifiedDomains = scandir(self::CERTBOT_CERTS_PATH);
         foreach ($certifiedDomains as $domain) {
 
-            $domainPath = $certsPath.'/'.$domain;
+            $domainPath = self::CERTBOT_CERTS_PATH.'/'.$domain;
             if ( $domain == '.' || $domain == '..' || !is_dir($domainPath) )
                 continue;
 
@@ -70,13 +146,13 @@ final class Certificate
             $privkeyPem    = @file_get_contents($domainPath.'/privkey.pem');
 
             if(!$fullchainPem || !$privkeyPem){
-                echo "Failed finding PEM files for domain '".$domain;
+                Log::error("Failed finding PEM files for domain ".$domain);
                 return false;
             }
 
             $content = $fullchainPem.PHP_EOL.$privkeyPem.PHP_EOL;
             if( !file_put_contents(self::HAPROXY_CERTS_PATH.'/'.$domain.'.pem', $content) ){
-                echo "Failed joining PEM files for ". $domain;
+                Log::error("Failed merging PEM files for ".$domain);
                 return false;
             }
         }
@@ -89,37 +165,61 @@ final class Certificate
      *
      * @var void
      */
-    public function createSingleCerts() :bool
+    public static function createSingles() :bool
     {
-        if(!Service::changeMode('certbot')){
-            echo 'Failed changing Haproxy mode to certbot';
+        if(empty(self::$email) || empty(self::$environment) || empty(self::$domains)){
+            Log::error("Failed checking needed parameters");
             return false;
         }
 
-        foreach ( $this->domains as $domain ){
+        $environment = '';
+        if(self::$environment === 'staging') $environment='--staging';
 
-            @shell_exec('certbot certonly
-              --standalone
-              --domains '.$domain.'
-              --email '.$this->email.'
-              --cert-name '.$domain.'
-              --agree-tos
-              --keep-until-expiring
-              --expand
-              --non-interactive
-              --http-01-port 8080 '.
-              $this->environment
-            );
+        if(!Service::changeMode('certbot')){
+            Log::error("Failed changing Haproxy mode to certbot");
+            return false;
+        }
 
-            if (@count(scandir(self::CERTBOT_CERTS_PATH . '/' . $domain)) <= 2){
-                echo 'Failed creating certificates for domain '.$domain;
+        foreach ( self::$domains as $domain ){
+
+            $cmd  = [
+                'certbot certonly',
+                '--standalone',
+                '-d '.$domain,
+                '-m '.self::$email,
+                '--cert-name '.$domain,
+                '--agree-tos',
+                '--keep-until-expiring',
+                '--expand',
+                '-n',
+                '--quiet',
+                '--http-01-port 8080',
+                $environment
+            ];
+            $output = @shell_exec(implode(' ', $cmd));
+
+            $certFiles = @scandir(self::CERTBOT_CERTS_PATH . '/' . $domain);
+            if(!$certFiles) $certFiles=[];
+            if (@count($certFiles) <= 2){
+                Log::error("Failed creating certificates for domain ".$domain);
                 return false;
             }
         }
         if(!Service::changeMode()){
-            echo 'Failed changing Haproxy mode to proxy';
+            Log::error("Failed changing Haproxy mode to proxy");
             return false;
         }
+        return true;
+    }
+
+    /**
+     *
+     *
+     * @var bool
+     */
+    public function createMixed() : bool
+    {
+        // TODO: Future issue :)
         return true;
     }
 
@@ -128,26 +228,23 @@ final class Certificate
      *
      * @var bool
      */
-    public function renewAll() :bool
+    public static function renewAll() :bool
     {
         if(!Service::changeMode("certbot")){
-            echo 'Failed changing Haproxy mode to certbot';
+            Log::error("Failed changing Haproxy mode to certbot");
             return false;
         }
 
         # Renew certificates
-        $output = shell_exec('certbot renew
-            --non-interactive
-            --http-01-port 8080'
-        );
+        $output = shell_exec('certbot renew --non-interactive --http-01-port 8080');
 
         if(empty($output)){
-            echo 'Failed executing certificates renewal';
+            Log::error("Failed executing certificates renewal");
             return false;
         }
 
         if(!Service::changeMode()){
-            echo 'Failed changing Haproxy mode to proxy';
+            Log::error("Failed changing Haproxy mode to proxy");
             return false;
         }
 
@@ -159,11 +256,11 @@ final class Certificate
      *
      * @var bool
      */
-    public function deleteAll() :bool
+    public static function deleteAll() :bool
     {
         $output = shell_exec("certbot delete");
         if(empty($output)){
-            echo 'Failed executing certificates deletion';
+            Log::error("Failed executing certificates deletion");
             return false;
         }
         return true;
@@ -174,14 +271,11 @@ final class Certificate
      *
      * @var bool
      */
-    public function delete(string $name) :bool
+    public static function delete(string $name) :bool
     {
-        $output = shell_exec("certbot delete
-            --non-interactive
-            --cert-name ".$name
-        );
+        $output = shell_exec("certbot delete --non-interactive --cert-name ".$name);
         if(empty($output)){
-            echo 'Failed executing certificate deletion';
+            Log::error("Failed executing certificate deletion");
             return false;
         }
         return true;
