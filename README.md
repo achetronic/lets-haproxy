@@ -1,53 +1,36 @@
-# Let's Haproxy
-
-## Author
-Hello, developer!
-
-I am Alby Hernández (alias @achetronic) and have done several projects for the cloud in my life. Hope you like it.
-
-There is a good article (not mine) explaining some principles about containers: https://developers.redhat.com/blog/2016/02/24/10-things-to-avoid-in-docker-containers/
-
-## Bugs
-If you find some bug or something that can be improved, please, feel free to contact me at me@achetronic.com
-
-## Source code of the project
-https://gitlab.com/achetronic/lets-haproxy
+# Lets Haproxy
 
 ## Introduction
-I made this image because of the need of having the Haproxy's ease and Let's Encrypt certs autoconfigured for my home server.
-I looked for something similar and Traeffik's documentation is a hell, Haproxy's Certbot LUA plugin is quite good but no time 
-for that and Nginx does not have plugins for that.
 
-## Who want this
-Everyone that use Haproxy and Docker. This is useful because you get all Haproxy options and a good automation for getting and renewing Let's Encrypt free certificates automatically.
+This package solves the problem of using Lets Encrypt certificates into Haproxy,
+getting, renewing and configuring them automagically for you.
+
+Just a Docker container where you mount your Haproxy configuration file.
+Simply works.
+
+## Bugs
+
+If you find a bug on this package, open an issue explaining the problem,
+make a fork, fix it and make a pull request to merge your changes to this repository
 
 ## How to use
-1. Bind your haproxy.cfg file to /root/templates/haproxy.user.cfg 
-2. Bind a volume to /var/log/letsencrypt for saving logs
-3. Bind a volume to /etc/letsencrypt/live for saving certificates
-4. Set environment variables
-   * ADMIN_MAIL    = admin@example.com
-   * SKIP_CREATION = true | false
-   * ENVIRONMENT   = production | staging
 
-
-## Fast to go
-```
+```bash
 docker run -it \
-  --env ADMIN_MAIL=admin@example.com \
-  --env SKIP_CREATION=false \
+  --env EMAIL=admin@example.com \
   --env ENVIRONMENT=staging \
-  -v "./haproxy.cfg:/root/templates/haproxy.user.cfg" \
+  -v "./haproxy.cfg:/usr/src/app/templates/haproxy.user.cfg" \
   -v "letsencrypt_logs:/var/log/letsencrypt" \
   -v "letsencrypt_data:/etc/letsencrypt" \
-  achetronic/lets-haproxy:latest 
+  achetronic/lets-haproxy:latest
 
 ```
 
 ## haproxy.cfg file
+
 As you can see, we bind the haproxy.cfg file to the container. This is your normal configuration file, nothing new. The only thing you need to define for sure is a frontend binded to 443 port with the domains you want to cert. For example:
 
-```
+```conf
 # CONFIGS APPLIED GLOBALLY
 global
     maxconn 32768
@@ -104,5 +87,7 @@ backend cluster_minecraft
     server node1 192.168.0.4:25565 check
 
 ```
-As you can see, there is a frontend binded to the port 443 with the domains defined as you usually would do it. They will be automatically detected and certs will be craft for them. Dont worry about anything and enjoy it.
 
+There is a frontend binded to the port 443 with the domains defined as you usually would do it.
+They will be automatically detected and certs will be craft for them.
+Dont worry about anything and enjoy it.

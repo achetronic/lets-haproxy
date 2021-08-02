@@ -1,99 +1,52 @@
-FROM debian:buster-slim
+# BASE STAGE
+FROM php:8.0-cli-alpine as base
 
-#### DEFINING VARS
-ARG php_version=7.3
+# Install base packages
+RUN apk update && \
+    apk add  \
+        bash \
+        procps \
+        certbot \
+        haproxy
 
+# Configure entrypoint
+COPY bin/docker-entrypoint.sh /usr/local/bin/
+RUN chmod 0775 /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["lets", "watch"]
 
+# BUILDING STAGE
+FROM base as build
 
-#### SYSTEM OPERATIONS
-# Install basic packages
-RUN apt-get update && apt-get install -y -qq --force-yes \
-    procps \
-    at \
-    lsb-base \
-    nano \
-    certbot \
-    haproxy \
-        --no-install-recommends > /dev/null
+# Generate vendor directory
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+COPY . /usr/src/app/
+RUN cd /usr/src/app && \
+    composer install --no-dev
 
-# Install out automation friends: PHP
-RUN apt-get install -y -qq --force-yes \
-    php${php_version}-cli \
-    php${php_version}-xml \
-        --no-install-recommends > /dev/null
+# APPLICATION STAGE
+FROM base as application
 
-# Installing temporary packages
-RUN apt-get install -y -qq --force-yes composer git zip unzip php${php_version}-zip --no-install-recommends > /dev/null
+# Set the timezone
+ENV TZ=UTC
 
+# Copy the application
+COPY . /usr/src/app/
+COPY --from=build /usr/src/app/vendor /usr/src/app/vendor/
 
+# Prepare executable permissions
+RUN chmod -R 0775 /usr/src/app/bin
 
-#### OPERATIONS
-# Creating a temporary folder for our app
-RUN mkdir -p /tmp/lets-haproxy
+# Link init scripts
+RUN ln -s /usr/src/app/bin/init.d/crond /etc/init.d/crond
+RUN ln -s /usr/src/app/bin/init.d/haproxy /etc/init.d/haproxy
+RUN chmod -R 0775 /etc/init.d
 
-# Download the entire project
-COPY . /tmp/lets-haproxy/
+RUN ln -s /usr/src/app/bin/service /usr/local/bin/service && \
+    chmod +x /usr/local/bin/service
 
-# Defining which packages Composer will install
-RUN cp /tmp/lets-haproxy/build/composer.lock /root/composer.lock
-RUN cp /tmp/lets-haproxy/build/composer.json /root/composer.json
+# Link the lets CLI
+RUN ln -s /usr/src/app/bin/lets.php /usr/local/bin/lets && \
+    chmod +x /usr/local/bin/lets
 
-# Please, Composer, install them
-RUN composer install -d /root --no-dev --no-scripts
-
-# Moving the app to the right place
-RUN cp -r /tmp/lets-haproxy/build/* /root
-RUN rm -rf /tmp/lets-haproxy
-
-# Deleting system temporary packages
-RUN apt-get purge -y -qq --force-yes composer git zip unzip php${php_version}-zip > /dev/null
-
-# Cleaning the system
-RUN apt-get -y -qq --force-yes autoremove > /dev/null
-
-# Giving permissions to the executables
-RUN chown root:root /root/*
-RUN find /root -type f -exec chmod 644 {} \;
-RUN find /root -type d -exec chmod 755 {} \;
-RUN chmod +x /root/*
-
-
-
-# ENTRYPOINT
-RUN rm -rf /entrypoint.sh && touch /entrypoint.sh
-RUN echo "#!/bin/bash" >> /entrypoint.sh
-RUN echo "service atd start" >> /entrypoint.sh
-RUN echo "php /root/main-flow.php" >> /init.sh
-RUN echo "sh /root/runtime/takeover.sh" >> /entrypoint.sh
-RUN echo 'exec "$@"' >> /entrypoint.sh
-RUN echo "/bin/bash" >> /entrypoint.sh
-
-# Giving permissions to the entrypoint script
-RUN chown root:root /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Giving permissions to the livenessprobe script
-RUN chown root:root /root/runtime/livenessprobe.sh
-RUN chmod +x /root/runtime/livenessprobe.sh
-
-# Giving permissions to the takeover script
-RUN chown root:root /root/runtime/takeover.sh
-RUN chmod +x /root/runtime/takeover.sh
-
-
-
-# CMD
-# RUN rm -rf /init.sh && touch /init.sh
-# RUN echo "#!/bin/bash" >> /init.sh
-# RUN echo "php /root/main-flow.php" >> /init.sh
-# RUN echo "/bin/bash" >> /init.sh
-
-# RUN chown root:root /init.sh
-# RUN chmod +x /init.sh
-
-# GAINING COMFORT
-WORKDIR "/root"
-
-# EXECUTING START SCRIPT
-ENTRYPOINT ["/entrypoint.sh"]
-# CMD /init.sh
+WORKDIR /usr/src/app

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Proxy script to the real script
+exec "/etc/init.d/$@"
