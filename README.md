@@ -1,3 +1,10 @@
+> **DISCLAIMER**
+> 
+> This project is no longer maintained because I have no time to do it.
+> I recommend you to use another called [Nginx Proxy Manager](https://github.com/jc21/nginx-proxy-manager) which works fine
+
+---
+
 # Lets Haproxy
 
 ## Introduction
